@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { BarChart3, TrendingUp, TrendingDown, Brain, Sparkles } from "lucide-react";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell, Legend,
+  AreaChart, Area, PieChart, Pie, Cell, Legend, BarChart,
 } from "recharts";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { cn } from "@/lib/utils";
