@@ -53,6 +53,8 @@ const paymentStatusBadge = {
 };
 
 export default function DashboardPage() {
+  console.log('Dashboard page rendered');
+  
   return (
     <div className="space-y-6">
       {/* Page title */}

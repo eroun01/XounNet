@@ -27,25 +27,43 @@ export default function LoginPage() {
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
   async function onLogin(values: LoginForm) {
-    setLoading(true);
-    setError(null);
+    // Prevent any default form behavior
+    event?.preventDefault();
+    event?.stopPropagation();
     
-    // Mock authentication for testing
-    // TODO: Replace with actual API call when backend is available
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    console.log('Login attempt with:', values);
     
-    if (values.email === "admin@xounnet.com" && values.password === "password123") {
-      // Mock successful login
-      const mockAccessToken = "mock_access_token_" + Date.now();
-      const mockRefreshToken = "mock_refresh_token_" + Date.now();
-      localStorage.setItem("access_token", mockAccessToken);
-      localStorage.setItem("refresh_token", mockRefreshToken);
-      router.replace("/");
-    } else {
-      setError("Invalid credentials. Use admin@xounnet.com / password123");
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Mock authentication for testing
+      // TODO: Replace with actual API call when backend is available
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      
+      console.log('Checking credentials:', values.email === "admin@xounnet.com", values.password === "password123");
+      
+      if (values.email === "admin@xounnet.com" && values.password === "password123") {
+        // Mock successful login
+        const mockAccessToken = "mock_access_token_" + Date.now();
+        const mockRefreshToken = "mock_refresh_token_" + Date.now();
+        localStorage.setItem("access_token", mockAccessToken);
+        localStorage.setItem("refresh_token", mockRefreshToken);
+        console.log('Login successful!');
+        
+        // Force immediate hard navigation
+        window.location.replace("/");
+        return; // Exit immediately
+      } else {
+        console.log('Login failed');
+        setError("Invalid credentials. Use admin@xounnet.com / password123");
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError("An error occurred. Please try again.");
+    } finally {
+      if (loading) setLoading(false);
     }
-    
-    setLoading(false);
   }
 
   return (
