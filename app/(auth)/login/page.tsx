@@ -4,10 +4,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Wifi, Loader2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Wifi, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api/client";
-import type { Metadata } from "next";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -22,52 +20,32 @@ type TwoFaForm = z.infer<typeof twoFaSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<"credentials" | "2fa">("credentials");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tempToken, setTempToken] = useState("");
 
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const twoFaForm = useForm<TwoFaForm>({ resolver: zodResolver(twoFaSchema) });
 
   async function onLogin(values: LoginForm) {
     setLoading(true);
     setError(null);
-    try {
-      const { data } = await apiClient.post("/auth/login", values);
-      if (data.requires2FA) {
-        setTempToken(data.tempToken);
-        setStep("2fa");
-      } else {
-        localStorage.setItem("access_token", data.accessToken);
-        localStorage.setItem("refresh_token", data.refreshToken);
-        router.replace("/");
-      }
-    } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? "Invalid credentials. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function on2FA(values: TwoFaForm) {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await apiClient.post("/auth/2fa/verify", {
-        tempToken,
-        code: values.code,
-      });
-      localStorage.setItem("access_token", data.accessToken);
-      localStorage.setItem("refresh_token", data.refreshToken);
+    
+    // Mock authentication for testing
+    // TODO: Replace with actual API call when backend is available
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    
+    if (values.email === "admin@xounnet.com" && values.password === "password123") {
+      // Mock successful login
+      const mockAccessToken = "mock_access_token_" + Date.now();
+      const mockRefreshToken = "mock_refresh_token_" + Date.now();
+      localStorage.setItem("access_token", mockAccessToken);
+      localStorage.setItem("refresh_token", mockRefreshToken);
       router.replace("/");
-    } catch {
-      setError("Invalid 2FA code. Please try again.");
-    } finally {
-      setLoading(false);
+    } else {
+      setError("Invalid credentials. Use admin@xounnet.com / password123");
     }
+    
+    setLoading(false);
   }
 
   return (
@@ -83,14 +61,13 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {step === "credentials" ? (
-        <>
-          <div className="mb-6">
-            <h2 className="text-white text-2xl font-semibold">Welcome back</h2>
-            <p className="text-surface-400 text-sm mt-1">Sign in to your account</p>
-          </div>
+      {/* Login form only - 2FA removed for mock auth */}
+      <div className="mb-6">
+        <h2 className="text-white text-2xl font-semibold">Welcome back</h2>
+        <p className="text-surface-400 text-sm mt-1">Sign in to your account</p>
+      </div>
 
-          <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+      <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-surface-300 mb-1.5">
                 Email address
@@ -167,73 +144,9 @@ export default function LoginPage() {
               {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
-        </>
-      ) : (
-        <>
-          <div className="mb-6">
-            <div className="w-12 h-12 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="w-6 h-6 text-accent" />
-            </div>
-            <h2 className="text-white text-2xl font-semibold text-center">
-              Two-factor auth
-            </h2>
-            <p className="text-surface-400 text-sm mt-1 text-center">
-              Enter the 6-digit code from your authenticator app
-            </p>
-          </div>
-
-          <form onSubmit={twoFaForm.handleSubmit(on2FA)} className="space-y-4">
-            <input
-              {...twoFaForm.register("code")}
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              className={cn(
-                "w-full bg-surface-700 border rounded-lg px-3.5 py-3 text-white text-center text-2xl tracking-widest",
-                "placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary",
-                "focus:border-transparent transition",
-                twoFaForm.formState.errors.code ? "border-danger" : "border-surface-600"
-              )}
-            />
-            {twoFaForm.formState.errors.code && (
-              <p className="text-danger text-xs text-center">
-                {twoFaForm.formState.errors.code.message}
-              </p>
-            )}
-
-            {error && (
-              <div className="bg-danger/10 border border-danger/30 rounded-lg px-3 py-2.5">
-                <p className="text-danger text-sm text-center">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={cn(
-                "w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover",
-                "text-white font-semibold rounded-lg py-2.5 transition",
-                "disabled:opacity-60 disabled:cursor-not-allowed"
-              )}
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? "Verifying…" : "Verify"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setStep("credentials"); setError(null); }}
-              className="w-full text-surface-400 hover:text-surface-200 text-sm transition"
-            >
-              ← Back to login
-            </button>
-          </form>
-        </>
-      )}
 
       <p className="text-surface-500 text-xs text-center mt-6">
-        XounNet ISP OS v1.0 · Secure login
+        Demo credentials: <strong>admin@xounnet.com</strong> / <strong>password123</strong>
       </p>
     </div>
   );
