@@ -110,7 +110,7 @@ export default function NOCPage() {
             <Tooltip
               contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }}
               labelFormatter={() => "Now"}
-              formatter={(v: number) => [formatBandwidth(v), ""]}
+              formatter={(v) => [formatBandwidth(typeof v === 'number' ? v : 0), ""]}
             />
             <Line type="monotone" dataKey="tx" stroke="#0066ff" strokeWidth={2} dot={false} isAnimationActive={false} name="TX" />
             <Line type="monotone" dataKey="rx" stroke="#00d4aa" strokeWidth={2} dot={false} isAnimationActive={false} name="RX" />
